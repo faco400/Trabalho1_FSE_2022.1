@@ -3,9 +3,17 @@ import adafruit_dht
 import time
 from definitions import *
 import os
+import socket
 
 room = 0
 dht_device = adafruit_dht.DHT22(DHT22[room])
+
+
+"""
+Config do socket
+"""
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+IP_address = '164.41.98.26'
 
 def setupPins():
   # rasp pin mode setup
@@ -31,7 +39,6 @@ def getHumidity():
     print("Temp={0:0.1f}*C  Humidity={1:0.1f}%".format(temperature, humidity))
   else:
     print("Failed to retrieve data from humidity sensor")
-
 
 if __name__ == '__main__':
   try:
