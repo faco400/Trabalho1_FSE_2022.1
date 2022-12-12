@@ -4,6 +4,7 @@ import time
 from definitions import *
 import os
 import socket
+import json
 
 room = 0
 dht_device = adafruit_dht.DHT22(DHT22[room])
@@ -14,6 +15,9 @@ Config do socket
 """
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 IP_address = '164.41.98.26'
+port  = 10191
+server_address = (IP_address, port)
+server.connect(server_address)
 
 def setupPins():
   # rasp pin mode setup
@@ -32,46 +36,64 @@ def setupPins():
   GPIO.setup(SC_OUT[room], GPIO.IN)
 
 def getHumidity():
-  # humidity, temperature = Adafruit_DHT.read_retry(DHT_SENSOR, DHT22[room])
-  temperature = dht_device.temperature
-  humidity = dht_device.humidity
-  if humidity is not None and temperature is not None:
-    print("Temp={0:0.1f}*C  Humidity={1:0.1f}%".format(temperature, humidity))
-  else:
-    print("Failed to retrieve data from humidity sensor")
+  try:
+    temperature = dht_device.temperature
+    humidity = dht_device.humidity
+    if humidity is not None and temperature is not None:
+      print("Temp={0:0.1f}*C  Humidity={1:0.1f}%".format(temperature, humidity))
+    else:
+      print("Failed to retrieve data from humidity sensor")
+  except:
+    getHumidity()
 
 if __name__ == '__main__':
   try:
+    msg = {
+      'L_01': 'OFF',
+      'L_02': 'OFF',
+      'AC': 'OFF',
+      'PR': 'OFF',
+      'AL_BZ': 'OFF'
+    }
     countP = 0
     setupPins()
     while(1):
       if GPIO.input(L_01[room]):
-        print('A lampada 1 ta acesa')
+        msg['L_01'] = 'ON'
       else:
-        print('A lampada 1 ta apagada')
+        msg['L_01'] = 'OFF'
       if GPIO.input(L_02[room]):
-        print('A lampada 2 ta acesa')
+         msg['L_02'] = 'ON'
+        # print('lampada 2 ligada')
       else:
-        print('A lampada 2 ta apagada')
+        msg['L_02'] = 'OFF'
+        # print('lampada 2 desligada')
       if GPIO.input(AC[room]):
-        print('O ar condicionado esta ligado')
+        msg['AC'] = 'ON'
+        # print('ar condicionado ligado')
       else:
-        print('O ar condicionado esta desligado')
+        msg['AC'] = 'OFF'
+        # print('ar condicionado desligado')
       if GPIO.input(PR[room]):
-        print('O projetor esta ligado')
+        msg['PR'] = 'ON'
+        # print('projetor ligado')
       else:
-        print('O projetor esta desligado')
+        msg['PR'] = 'OFF'
+      if GPIO.input(AL_BZ[room]):
+        msg['AL_BZ'] = 'ON'
+        # print('alarme ligado')
+      else:
+        msg['AL_BZ'] = 'OFF'
+        # print('alarme desligado')
       if GPIO.input(SC_IN[room]):
         print('Alguem entrou no predio')
         countP = countP + 1
-        print(countP)
       else:
         pass
       if GPIO.input(SC_OUT[room]):
         print('Alguem saiu no predio')
         if countP > 0 and countP != 0:
           countP = countP - 1
-        print(countP)
       else:
         pass
       if GPIO.input(SFum[room]):
@@ -89,14 +111,16 @@ if __name__ == '__main__':
 
       print(f'Ha {countP} pessoas na sala')
       getHumidity()
-      time.sleep(0.5)
+      msg_to_send = json.dumps(msg).encode('ascii')
+      server.send(msg_to_send)
+      time.sleep(0.2)
       os.system('clear')
   except KeyboardInterrupt: # if ctrl + c is pressed, exit cleanly
     # GPIO.cleanup()
     pass
 
 # A Fazer...
-# conectar com o server central
+# conectar com o server central [OK]
 # instancias conectadas conforme json
 # fazer as threads pra distr e central
 # Atualizar temp e humidity a cada 2s separadamente
