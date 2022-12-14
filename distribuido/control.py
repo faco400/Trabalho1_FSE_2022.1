@@ -1,23 +1,12 @@
 import RPi.GPIO as GPIO
 import adafruit_dht
 import time
-from definitions import *
 import os
-import socket
 import json
+from definitions import *
 
 room = 0
 dht_device = adafruit_dht.DHT22(DHT22[room])
-
-
-"""
-Config do socket
-"""
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-IP_address = '164.41.98.26'
-port  = 10191
-server_address = (IP_address, port)
-server.connect(server_address)
 
 def setupPins():
   # rasp pin mode setup
@@ -46,8 +35,9 @@ def getHumidity():
   except:
     getHumidity()
 
-if __name__ == '__main__':
+def states(server):
   try:
+    # Leitura de arquivos
     msg = {
       'L_01': 'OFF',
       'L_02': 'OFF',
@@ -97,17 +87,23 @@ if __name__ == '__main__':
       else:
         pass
       if GPIO.input(SFum[room]):
-        print('Sensor de fumaça ligado')
+        # print('Sensor de fumaça ligado')
+        pass
       else:
-        print('Sensor de fumaça desligado')
+        # print('Sensor de fumaça desligado')
+        pass
       if GPIO.input(SJan[room]):
-        print('Janela aberta')
+        # print('Janela aberta')
+        pass
       else:
-        print('Janela fechada')
+        # print('Janela fechada')
+        pass
       if GPIO.input(SPor[room]):
-        print('Porta aberta')
+        # print('Porta aberta')
+        pass
       else:
-        print('Porta fechada')
+        # print('Porta fechada')
+        pass
 
       print(f'Ha {countP} pessoas na sala')
       getHumidity()
@@ -118,15 +114,3 @@ if __name__ == '__main__':
   except KeyboardInterrupt: # if ctrl + c is pressed, exit cleanly
     # GPIO.cleanup()
     pass
-
-# A Fazer...
-# conectar com o server central [OK]
-# instancias conectadas conforme json
-# fazer as threads pra distr e central
-# Atualizar temp e humidity a cada 2s separadamente
-# comunicar com o server pra acionar conforme pedido lampadas, sensores e projetores e retornar sobre sucess
-# Informar server central do acionamento do sensor de presença, e janelas e portas
-# informar acionamento do sensor de fumaça
-
-# ideias...
-# pra comunicar sobre estados enviar sinais pro server central ...

@@ -1,18 +1,12 @@
-import socket
 import os
 import threading
 import json
 import time
+import tcpCentral
 
-host = '164.41.98.26'
-port = 10191
-server_address = (host, port)
-
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# server.setsockopt(socket.SOL_SOCKET, SO_REUSEADDR, 1)
-
-server.bind(server_address)
-server.listen(4)
+def send(conn):
+  conn.send('ON'.encode('ascii'))
+  print("oi")
 
 def handle(conn):
   try:
@@ -21,8 +15,6 @@ def handle(conn):
       # os.system('clear')
       # conn.send('L_01'.decode('ascii'))
       status = conn.recv(2048).decode('ascii')
-      if not status:
-        print('oi')
       status = json.loads(status)
       print(status)
       # if status == 'L_01_ON':
@@ -64,6 +56,8 @@ def receive():
       # cria uma thread que ira tratar o cliente
       thread = threading.Thread(target=handle, args=(conn,))
       thread.start()  # inicia a thread
+      thread = threading.Thread(target=send, args=(conn,))
+      thread.start()  # inicia a thread
 
   except KeyboardInterrupt:
     conn.close()
@@ -87,7 +81,9 @@ def menu():
   except KeyboardInterrupt:
     pass
 
+
 if __name__ == '__main__':
   os.system('clear')
+  server = tcpCentral.init()
   receive()
   # Fazer thread pro menu() e desenvolve-lo
