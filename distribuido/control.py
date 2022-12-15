@@ -43,7 +43,8 @@ def states(server):
       'L_02': 'OFF',
       'AC': 'OFF',
       'PR': 'OFF',
-      'AL_BZ': 'OFF'
+      'AL_BZ': 'OFF',
+      'Temperatura': '0'
     }
     countP = 0
     setupPins()
@@ -107,10 +108,14 @@ def states(server):
 
       print(f'Ha {countP} pessoas na sala')
       getHumidity()
-      msg_to_send = json.dumps(msg).encode('ascii')
-      server.send(msg_to_send)
+
+      # Armazenando dados em um json de estados
+      with open('./states.json', 'w') as outfile:
+        json.dump(msg,outfile)
+      # msg_to_send = json.dumps(msg).encode('ascii')
+      # server.send(msg_to_send)
       time.sleep(0.2)
-      os.system('clear')
+      # os.system('clear')
   except KeyboardInterrupt: # if ctrl + c is pressed, exit cleanly
     # GPIO.cleanup()
     pass

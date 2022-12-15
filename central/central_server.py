@@ -3,43 +3,36 @@ import threading
 import json
 import time
 import tcpCentral
+import sys
 
-def send(conn):
-  conn.send('ON'.encode('ascii'))
-  print("oi")
+room_status = []
+listconn = {}
+addresses = []
 
+def sendCommand(conn, COMMAND):
+  conn.send(COMMAND.encode('ascii'))
+  # print("oi")
+
+# Apagar? Desnecessario...
 def handle(conn):
   try:
-    print('Estados das Saidas:')
     while True:
-      # os.system('clear')
-      # conn.send('L_01'.decode('ascii'))
       status = conn.recv(2048).decode('ascii')
       status = json.loads(status)
+      room_status = status
       print(status)
-      # if status == 'L_01_ON':
-      #   print('Lampada 1 ligada')
-      # elif status == 'L_01_OFF':
-      #   print('Lampada 1 desligada')
-      # if status == 'L_02_ON':
-      #   print('Lampada 2 ligada')
-      # elif status == 'L_02_OFF':
-      #   print('Lampada 2 desligada')
-      # if status_AC == 'AC_ON':
-      #   print('Ar condicionado ligado')
-      # elif status_AC == 'AC_OFF':
-      #   print('Ar condicionado desligado')
-      # if status_PR == 'PR_ON':
-      #   print('Projetor ligado\n')
-      # elif status_PR == 'PR_OFF':
-      #   print('Projetor desligado\n')
-      # if status_AL_BZ == 'AL_BZ_ON':
-      #   print('Alarme ligado')
-      # elif status_AL_BZ == 'AL_BZ_OFF':
-      #   print('Alarme desligado')
-      # print('Estados das Sensores:')
+  except KeyboardInterrupt:
+    print('Error handling connections')
+    exit()
+
+def get_status(conn):
+  try:
+    status = conn.recv(2048).decode('ascii')
+    status = json.loads(status)
+    # print(status)
+    return status
   except:
-    return
+    print('Error getting status')
 
 def receive():
   try:
@@ -50,40 +43,47 @@ def receive():
     # elif ip_test == '164.41.98.26' or ip_test == '164.41.98.15':
     #   print('Usa config 2')
     #   pass
+
     while True:
       conn, addr = server.accept()
+      addresses.append(addr[0])
+      listconn[addr[0]] = conn
       print(f"{str(addr)} connected")
-      # cria uma thread que ira tratar o cliente
-      thread = threading.Thread(target=handle, args=(conn,))
-      thread.start()  # inicia a thread
-      thread = threading.Thread(target=send, args=(conn,))
-      thread.start()  # inicia a thread
 
   except KeyboardInterrupt:
-    conn.close()
+    # conn.close()
+    pass
 
     
 def menu():
   try:
     op = 0
-    while op != 1 or op !=2:
-      op = input('Digite 1 para monitorar os sensores\nDigite 2 para sair do programa\n')
-      op = int(op)
-      if op == 1:
-        room = 0
-        while room < 1 or room > 4:
-          os.system('clear')
-          room = input('Digite o numero da sala que deseja monitorar (1-4)\n')
-          room = int(room)
-          # receive()
-      elif op == 2:
-        return 0
+    while op != 3:
+      os.system('clear')
+      print('-----MENU------')
+      print('1) Listar estados dos dispositivos das salas') # Por enquanto funciona voltado para uma sala 1
+      print('2) Ative um dispositivo') # Em construção...
+      print('3) Sair do programa')
+      op = input('Digite uma opcao: ')
+      if int(op)<1 or int(op)> 3:
+        menu()
+      
+      if int(op) == 1:
+        sendCommand(listconn[addresses[0]], 'GET_STATUS')
+        print(get_status(listconn[addresses[0]]))
+        time.sleep(3)
+
+      if int(op) == 2:
+        pass
+      if int(op) == 3:
+        quit()
+
   except KeyboardInterrupt:
-    pass
+    quit()
 
 
 if __name__ == '__main__':
-  os.system('clear')
-  server = tcpCentral.init()
-  receive()
-  # Fazer thread pro menu() e desenvolve-lo
+  server = tcpCentral.init() #Configura socket do servidor central
+  menuThread = threading.Thread(target=menu, ) #thread pra conversar com user
+  menuThread.start()  # inicia a thread
+  receive() # Inicia dialogo com distr
