@@ -4,14 +4,15 @@ import json
 import threading
 import tcpDistr
 import control
+import socket
 
 def receive(server):
   try:
     while True:
       message = server.recv(2048).decode('ascii')
       print (message)
-      if message.startswith('GET_STATUS'): #== 'GET_STATUS':
-        with open('states.json', 'r') as openfile:
+      if message.startswith('GET_STATUS'):
+        with open('states/states.json', 'r') as openfile:
           json_object = json.load(openfile)
           msg_to_send = json.dumps(json_object).encode('ascii')
           server.send(msg_to_send)
@@ -24,11 +25,12 @@ def receive(server):
 
 if __name__ == '__main__':
   try:
-    server= tcpDistr.init() # inicializa conexao com servidor central
-    controlThread = threading.Thread(target=control.states, args=(server,)) # thread pra atualizar controle de estados
+    server = tcpDistr.init()
+    config = control.readConfig('configuracao_sala_03.json')
+    controlThread = threading.Thread(target=control.states, args=(config,)) # thread pra atualizar controle de estados
     controlThread.start()  # inicia a thread
+    print('Conversando com servidor central...')
     receive(server) # Inicia dialogo com central
-    # control.readConfig()
 
   except KeyboardInterrupt: # if ctrl + c is pressed, exit cleanly
     exit()

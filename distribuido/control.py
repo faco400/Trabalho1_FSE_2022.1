@@ -4,40 +4,73 @@ import time
 import os
 import json
 from definitions import *
+import board
 
 room = 0
-dht_device = adafruit_dht.DHT22(DHT22[room], False)
 
-def setupPins():
+def readConfig(filename):
+  with open(filename,'r') as configfile:
+    obj = json.load(configfile)
+    config = {}
+
+    config['ip_servidor_central'] = obj['ip_servidor_central']
+    config['porta_servidor_central'] = obj['porta_servidor_central']
+    config['ip_servidor_distribuido'] = obj['ip_servidor_distribuido']
+    config['porta_servidor_distribuido'] = obj['porta_servidor_distribuido']
+    config['nome'] = obj['nome']
+
+    config['L_01'] = obj['outputs'][0]['gpio']
+    config['L_02'] = obj['outputs'][1]['gpio']
+    config['PR'] = obj['outputs'][2]['gpio']
+    config['AC'] = obj['outputs'][3]['gpio']
+    config['AL_BZ'] = obj['outputs'][4]['gpio']
+
+    config['SPres'] = obj['inputs'][0]['gpio']
+    config['SFum'] = obj['inputs'][1]['gpio']
+    config['SJan'] = obj['inputs'][2]['gpio']
+    config['SPor'] = obj['inputs'][3]['gpio']
+    config['SC_IN'] = obj['inputs'][4]['gpio']
+    config['SC_OUT'] = obj['inputs'][5]['gpio']
+    config['DHT22'] = obj['sensor_temperatura'][0]['gpio']
+
+    return config
+    
+
+def setupPins(config):
   # rasp pin mode setup
   GPIO.setmode(GPIO.BCM)
   # rasp in setup
-  GPIO.setup(L_01[room], GPIO.OUT)
-  GPIO.setup(L_02[room], GPIO.OUT)
-  GPIO.setup(AC[room], GPIO.OUT)
-  GPIO.setup(PR[room], GPIO.OUT)
-  GPIO.setup(AL_BZ[room], GPIO.OUT)
-  GPIO.setup(SPres[room], GPIO.IN)
-  GPIO.setup(SFum[room], GPIO.IN)
-  GPIO.setup(SJan[room], GPIO.IN)
-  GPIO.setup(SPor[room], GPIO.IN)
-  GPIO.setup(SC_IN[room], GPIO.IN)
-  GPIO.setup(SC_OUT[room], GPIO.IN)
+  GPIO.setup(config['L_01'], GPIO.OUT)
+  GPIO.setup(config['L_02'], GPIO.OUT)
+  GPIO.setup(config['PR'], GPIO.OUT)
+  GPIO.setup(config['AC'], GPIO.OUT)
+  GPIO.setup(config['AL_BZ'], GPIO.OUT)
+  GPIO.setup(config['SPres'], GPIO.IN)
+  GPIO.setup(config['SFum'], GPIO.IN)
+  GPIO.setup(config['SJan'], GPIO.IN)
+  GPIO.setup(config['SPor'], GPIO.IN)
+  GPIO.setup(config['SC_IN'], GPIO.IN)
+  GPIO.setup(config['SC_OUT'], GPIO.IN)
 
-def getHumidity():
+def getHumidity(config):
   try:
+    if config['DHT22'] == 4:
+      dht_device = adafruit_dht.DHT22(board.D4, False)
+    elif config['DHT22'] == 18:
+      dht_device = adafruit_dht.DHT22(board.D18, False)
+    
     temperature = dht_device.temperature
     humidity = dht_device.humidity
     if humidity is not None and temperature is not None:
-      print("Temp={0:0.1f}*C  Humidity={1:0.1f}%".format(temperature, humidity))
+      return (temperature,humidity)
     else:
       print("Failed to retrieve data from humidity sensor")
   except:
-    getHumidity()
+    return getHumidity(config)
 
-def states(server):
+def states(config):
   try:
-    # Leitura de arquivos
+    countP = 0
     msg = {
       'L_01': 'OFF',
       'L_02': 'OFF',
@@ -49,77 +82,70 @@ def states(server):
       'SJan': 'OFF',
       'SPor': 'OFF',
       'Temperatura': '0',
-      'Humidade': ''
+      'Humidade': '0',
+      'Pessoas': 0
     }
-    countP = 0
-    setupPins()
+    setupPins(config)
+
     while(1):
-      if GPIO.input(L_01[room]):
+      if GPIO.input(config['L_01']):
         msg['L_01'] = 'ON'
       else:
         msg['L_01'] = 'OFF'
 
-      if GPIO.input(L_02[room]):
+      if GPIO.input(config['L_02']):
          msg['L_02'] = 'ON'
-        # print('lampada 2 ligada')
       else:
         msg['L_02'] = 'OFF'
-        # print('lampada 2 desligada')
 
-      if GPIO.input(AC[room]):
+      if GPIO.input(config['AC']):
         msg['AC'] = 'ON'
-        # print('ar condicionado ligado')
       else:
         msg['AC'] = 'OFF'
-        # print('ar condicionado desligado')
 
-      if GPIO.input(PR[room]):
+      if GPIO.input(config['PR']):
         msg['PR'] = 'ON'
-        # print('projetor ligado')
       else:
         msg['PR'] = 'OFF'
 
-      if GPIO.input(AL_BZ[room]):
+      if GPIO.input(config['AL_BZ']):
         msg['AL_BZ'] = 'ON'
-        # print('alarme ligado')
       else:
         msg['AL_BZ'] = 'OFF'
-        # print('alarme desligado')
 
-      if GPIO.input(SC_IN[room]):
-        print('Alguem entrou no predio')
+      if GPIO.input(config['SC_IN']):
         countP = countP + 1
-      if GPIO.input(SC_OUT[room]):
-        print('Alguem saiu no predio')
+      if GPIO.input(config['SC_OUT']):
         if countP > 0 and countP != 0:
           countP = countP - 1
 
-      if GPIO.input(SPres[room]):
-        # print('Sensor de fumaça ligado')
+      if GPIO.input(config['SPres']):
         msg['SPres'] = 'ON'
       else:
         msg['SPres'] = 'OFF'
 
-      if GPIO.input(SFum[room]):
+      if GPIO.input(config['SFum']):
         msg['SFum'] = 'ON'
       else:
         msg['SFum'] = 'OFF'
       
-      if GPIO.input(SJan[room]):
+      if GPIO.input(config['SJan']):
         msg['SJan'] = 'ON'
       else:
         msg['SJan'] = 'OFF'
       
-      if GPIO.input(SPor[room]):
+      if GPIO.input(config['SPor']):
         msg['SPor'] = 'ON'
       else:
         msg['SPor'] = 'OFF'
 
-      getHumidity()
-      print(f'Ha {countP} pessoas na sala')
+      temp, hum = getHumidity(config)
+      msg['Temperatura'] = temp
+      msg['Humidade'] = hum
+      msg['Pessoas'] = str(countP)
 
       # Armazenando dados em um json de estados
-      with open('./states.json', 'w') as outfile:
+      with open('states/states.json', 'w') as outfile:
         json.dump(msg,outfile)
       # msg_to_send = json.dumps(msg).encode('ascii')
       # server.send(msg_to_send)

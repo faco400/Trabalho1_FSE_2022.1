@@ -11,7 +11,6 @@ addresses = []
 
 def sendCommand(conn, COMMAND):
   conn.send(COMMAND.encode('ascii'))
-  # print("oi")
 
 # Apagar? Desnecessario...
 def handle(conn):
@@ -29,32 +28,23 @@ def get_status(conn):
   try:
     status = conn.recv(2048).decode('ascii')
     status = json.loads(status)
-    # print(status)
-    # return status
+
     print('Saidas:')
-    print('L_01: '+status['L_01'])
-    print('L_02: '+status['L_02'])
+    print('L_01: '+status['L_01']+' L_02: '+status['L_02'])
     print('AC: '+status['AC'])
     print('PR: '+status['PR'])
     print('AL_BZ: '+status['AL_BZ'])
     print('Sensores:')
     print('SPres: '+status['SPres'])
     print('SFum: '+status['SFum'])
-    print('SJan: '+status['SJan'])
-    print('SPor: '+status['SPor'])
+    print('SJan: '+status['SJan']+' SPor: '+status['SPor'])
+    print("Temp={0:0.1f}*C  Humidity={1:0.1f}%".format(status['Temperatura'], status['Humidade']))
+    print('Total de pessoas nesta sala: '+status['Pessoas'])
   except:
     print('Error getting status')
 
 def receive():
   try:
-    # ip_test = addr[0]
-    # if ip_test == '164.41.98.16' or ip_test == '164.41.98.28':
-    #   print('Usa config 1')
-    #   pass
-    # elif ip_test == '164.41.98.26' or ip_test == '164.41.98.15':
-    #   print('Usa config 2')
-    #   pass
-
     while True:
       conn, addr = server.accept()
       addresses.append(addr[0])
@@ -62,8 +52,7 @@ def receive():
       print(f"{str(addr)} connected")
 
   except KeyboardInterrupt:
-    # conn.close()
-    pass
+    return
 
     
 def menu():
@@ -80,15 +69,19 @@ def menu():
         menu()
       
       if int(op) == 1:
+        if len(addresses) == 0:
+          print('Nenhuma sala conectada')
+          input('Aperte enter para continuar...')
+          continue
+
         room = -1
         while room > len(addresses) or room < 0:
           os.system('clear')
-          print('-----SUBMENU-------')
+          print('----- Listar Estados -------')
           print('Salas conectadas:')
           for i in range(len(addresses)):
             print(f'Sala {i} - IP:{addresses[i]}')
           room = int(input('Digite o numero da sala desejada'))
-
 
         sendCommand(listconn[addresses[room]], f'GET_STATUS{addresses[room]}') #Mandar ip? Sala...?
         get_status(listconn[addresses[room]])
