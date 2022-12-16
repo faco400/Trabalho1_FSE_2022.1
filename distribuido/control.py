@@ -6,7 +6,7 @@ import json
 from definitions import *
 
 room = 0
-dht_device = adafruit_dht.DHT22(DHT22[room])
+dht_device = adafruit_dht.DHT22(DHT22[room], False)
 
 def setupPins():
   # rasp pin mode setup
@@ -44,7 +44,12 @@ def states(server):
       'AC': 'OFF',
       'PR': 'OFF',
       'AL_BZ': 'OFF',
-      'Temperatura': '0'
+      'SPres': 'OFF',
+      'SFum': 'OFF',
+      'SJan': 'OFF',
+      'SPor': 'OFF',
+      'Temperatura': '0',
+      'Humidade': ''
     }
     countP = 0
     setupPins()
@@ -53,61 +58,65 @@ def states(server):
         msg['L_01'] = 'ON'
       else:
         msg['L_01'] = 'OFF'
+
       if GPIO.input(L_02[room]):
          msg['L_02'] = 'ON'
         # print('lampada 2 ligada')
       else:
         msg['L_02'] = 'OFF'
         # print('lampada 2 desligada')
+
       if GPIO.input(AC[room]):
         msg['AC'] = 'ON'
         # print('ar condicionado ligado')
       else:
         msg['AC'] = 'OFF'
         # print('ar condicionado desligado')
+
       if GPIO.input(PR[room]):
         msg['PR'] = 'ON'
         # print('projetor ligado')
       else:
         msg['PR'] = 'OFF'
+
       if GPIO.input(AL_BZ[room]):
         msg['AL_BZ'] = 'ON'
         # print('alarme ligado')
       else:
         msg['AL_BZ'] = 'OFF'
         # print('alarme desligado')
+
       if GPIO.input(SC_IN[room]):
         print('Alguem entrou no predio')
         countP = countP + 1
-      else:
-        pass
       if GPIO.input(SC_OUT[room]):
         print('Alguem saiu no predio')
         if countP > 0 and countP != 0:
           countP = countP - 1
-      else:
-        pass
-      if GPIO.input(SFum[room]):
-        # print('Sensor de fumaça ligado')
-        pass
-      else:
-        # print('Sensor de fumaça desligado')
-        pass
-      if GPIO.input(SJan[room]):
-        # print('Janela aberta')
-        pass
-      else:
-        # print('Janela fechada')
-        pass
-      if GPIO.input(SPor[room]):
-        # print('Porta aberta')
-        pass
-      else:
-        # print('Porta fechada')
-        pass
 
-      print(f'Ha {countP} pessoas na sala')
+      if GPIO.input(SPres[room]):
+        # print('Sensor de fumaça ligado')
+        msg['SPres'] = 'ON'
+      else:
+        msg['SPres'] = 'OFF'
+
+      if GPIO.input(SFum[room]):
+        msg['SFum'] = 'ON'
+      else:
+        msg['SFum'] = 'OFF'
+      
+      if GPIO.input(SJan[room]):
+        msg['SJan'] = 'ON'
+      else:
+        msg['SJan'] = 'OFF'
+      
+      if GPIO.input(SPor[room]):
+        msg['SPor'] = 'ON'
+      else:
+        msg['SPor'] = 'OFF'
+
       getHumidity()
+      print(f'Ha {countP} pessoas na sala')
 
       # Armazenando dados em um json de estados
       with open('./states.json', 'w') as outfile:

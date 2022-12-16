@@ -10,7 +10,7 @@ def receive(server):
     while True:
       message = server.recv(2048).decode('ascii')
       print (message)
-      if str(message) == 'GET_STATUS':
+      if message.startswith('GET_STATUS'): #== 'GET_STATUS':
         with open('states.json', 'r') as openfile:
           json_object = json.load(openfile)
           msg_to_send = json.dumps(json_object).encode('ascii')
@@ -24,10 +24,11 @@ def receive(server):
 
 if __name__ == '__main__':
   try:
-    server = tcpDistr.init() # inicializa conexao com servidor central
+    server= tcpDistr.init() # inicializa conexao com servidor central
     controlThread = threading.Thread(target=control.states, args=(server,)) # thread pra atualizar controle de estados
     controlThread.start()  # inicia a thread
     receive(server) # Inicia dialogo com central
+    # control.readConfig()
 
   except KeyboardInterrupt: # if ctrl + c is pressed, exit cleanly
     exit()

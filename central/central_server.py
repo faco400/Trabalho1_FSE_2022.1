@@ -30,7 +30,18 @@ def get_status(conn):
     status = conn.recv(2048).decode('ascii')
     status = json.loads(status)
     # print(status)
-    return status
+    # return status
+    print('Saidas:')
+    print('L_01: '+status['L_01'])
+    print('L_02: '+status['L_02'])
+    print('AC: '+status['AC'])
+    print('PR: '+status['PR'])
+    print('AL_BZ: '+status['AL_BZ'])
+    print('Sensores:')
+    print('SPres: '+status['SPres'])
+    print('SFum: '+status['SFum'])
+    print('SJan: '+status['SJan'])
+    print('SPor: '+status['SPor'])
   except:
     print('Error getting status')
 
@@ -69,9 +80,20 @@ def menu():
         menu()
       
       if int(op) == 1:
-        sendCommand(listconn[addresses[0]], 'GET_STATUS')
-        print(get_status(listconn[addresses[0]]))
-        time.sleep(3)
+        room = -1
+        while room > len(addresses) or room < 0:
+          os.system('clear')
+          print('-----SUBMENU-------')
+          print('Salas conectadas:')
+          for i in range(len(addresses)):
+            print(f'Sala {i} - IP:{addresses[i]}')
+          room = int(input('Digite o numero da sala desejada'))
+
+
+        sendCommand(listconn[addresses[room]], f'GET_STATUS{addresses[room]}') #Mandar ip? Sala...?
+        get_status(listconn[addresses[room]])
+        input('Aperte enter para continuar...')
+        
 
       if int(op) == 2:
         pass
