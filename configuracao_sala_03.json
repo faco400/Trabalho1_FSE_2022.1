@@ -2,7 +2,7 @@
   "ip_servidor_central": "164.41.98.26",
   "porta_servidor_central": 10191,
   "ip_servidor_distribuido": "164.41.98.28",
-  "porta_servidor_distribuido": 10191,
+  "porta_servidor_distribuido": 10192,
   "nome": "Sala 03",
   "outputs": [
       {

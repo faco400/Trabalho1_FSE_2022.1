@@ -19,10 +19,23 @@ def handle(conn):
       status = conn.recv(2048).decode('ascii')
       status = json.loads(status)
       room_status = status
-      print(status)
+      # print(status)
   except KeyboardInterrupt:
     print('Error handling connections')
     exit()
+
+def show_output(conn):
+  try:
+    status = conn.recv(2048).decode('ascii')
+    status = json.loads(status)
+
+    print('Saidas:')
+    print('1) L_01: '+status['L_01'])
+    print('2) L_02: '+status['L_02'])
+    print('3) AC: '+status['AC'])
+    print('4) PR: '+status['PR'])
+  except:
+    print('Error getting output')
 
 def get_status(conn):
   try:
@@ -43,6 +56,17 @@ def get_status(conn):
   except:
     print('Error getting status')
 
+def get_sucess(conn):
+  try:
+    response = conn.recv(2048).decode('ascii')
+    if response == 'OK':
+      print('Dispositivo alternado com sucesso!')
+    elif response == 'NOT_OK':
+      print('Houve problema em alternar dispositivo!!')
+  except:
+    print('Error getting response')
+    
+
 def receive():
   try:
     while True:
@@ -54,7 +78,6 @@ def receive():
   except KeyboardInterrupt:
     return
 
-    
 def menu():
   try:
     op = 0
@@ -77,19 +100,44 @@ def menu():
         room = -1
         while room > len(addresses) or room < 0:
           os.system('clear')
-          print('----- Listar Estados -------')
+          print('------- Listar Estados -------')
           print('Salas conectadas:')
           for i in range(len(addresses)):
             print(f'Sala {i} - IP:{addresses[i]}')
           room = int(input('Digite o numero da sala desejada'))
 
-        sendCommand(listconn[addresses[room]], f'GET_STATUS{addresses[room]}') #Mandar ip? Sala...?
+        sendCommand(listconn[addresses[room]], f'GET_STATUS') #Mandar ip? Sala...?
         get_status(listconn[addresses[room]])
         input('Aperte enter para continuar...')
-        
 
       if int(op) == 2:
-        pass
+        if len(addresses) == 0:
+          print('Nenhuma sala conectada')
+          input('Aperte enter para continuar...')
+          continue
+        room = -1
+        while room > len(addresses) or room < 0:
+          os.system('clear')
+          print('----- Listar Estados -------')
+          print('Salas conectadas:')
+          for i in range(len(addresses)):
+            print(f'Sala {i} - IP:{addresses[i]}')
+          room = int(input('Digite o numero da sala desejada: '))
+        
+        device = -1
+        while device < 1 or device > 4:
+          os.system('clear')
+          print('-------- Dispositivos --------')
+          sendCommand(listconn[addresses[room]], f'GET_STATUS')
+          show_output(listconn[addresses[room]])
+          device = int(input('Digite o numero do dispositivo que deseja alternar entre ON/OFF: '))
+          print('escolhi '+str(device))
+          if device == 1:
+            sendCommand(listconn[addresses[room]], f'ON_OFF_L_01')
+          get_sucess(listconn[addresses[room]])
+          print('Redirecionando para o menu. Aguarde...')
+          time.sleep(2)
+        
       if int(op) == 3:
         quit()
 

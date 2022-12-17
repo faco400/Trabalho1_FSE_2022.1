@@ -4,9 +4,10 @@ import json
 import threading
 import tcpDistr
 import control
+import RPi.GPIO as GPIO
 import socket
 
-def receive(server):
+def receive(server, config):
   try:
     while True:
       message = server.recv(2048).decode('ascii')
@@ -16,21 +17,28 @@ def receive(server):
           json_object = json.load(openfile)
           msg_to_send = json.dumps(json_object).encode('ascii')
           server.send(msg_to_send)
-      if str(message) == 'ON':
-        print('Tentei')
-        GPIO.output(L_01[room], GPIO.LOW)
-  except:
-    print('Error receiving and handling message')
-    pass
+      if message.startswith('ON_OFF_'):
+        device = message[7:]
+        if GPIO.input(config[device]):
+          GPIO.output(config[device], GPIO.LOW)
+          server.send('OK'.encode('ascii'))
+          continue
+        else: 
+          # print('Ligando...')
+          server.send('OK'.encode('ascii'))
+          GPIO.output(config[device], GPIO.HIGH)
+          continue
+        server.send('NOT_OK'.encode('ascii'))
+  except RuntimeError as error:
+        return error.args[0]
 
 if __name__ == '__main__':
   try:
-    server = tcpDistr.init()
-    config = control.readConfig('configuracao_sala_03.json')
+    server, config = tcpDistr.init()
     controlThread = threading.Thread(target=control.states, args=(config,)) # thread pra atualizar controle de estados
     controlThread.start()  # inicia a thread
     print('Conversando com servidor central...')
-    receive(server) # Inicia dialogo com central
+    receive(server, config) # Inicia dialogo com central
 
   except KeyboardInterrupt: # if ctrl + c is pressed, exit cleanly
     exit()
