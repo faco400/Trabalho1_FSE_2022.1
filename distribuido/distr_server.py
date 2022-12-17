@@ -17,6 +17,7 @@ def receive(server, config):
           json_object = json.load(openfile)
           msg_to_send = json.dumps(json_object).encode('ascii')
           server.send(msg_to_send)
+
       if message.startswith('ON_OFF_'):
         device = message[7:]
         if GPIO.input(config[device]):
@@ -25,10 +26,33 @@ def receive(server, config):
           continue
         else: 
           # print('Ligando...')
-          server.send('OK'.encode('ascii'))
           GPIO.output(config[device], GPIO.HIGH)
+          server.send('OK'.encode('ascii'))
           continue
-        server.send('NOT_OK'.encode('ascii'))
+
+        # server.send('NOT_OK'.encode('ascii'))
+      if message.startswith('ON_ALL'):
+        try:
+          keys = [*config]
+          for device in keys[5:9]:
+            # print(device)
+            print(config[device])
+            GPIO.output(config[device], GPIO.HIGH)
+          server.send('OK'.encode('ascii'))
+          continue
+        except: 
+          server.send('NOT_OK'.encode('ascii'))
+
+      if message.startswith('OFF_ALL'):
+        try:
+          keys = [*config]
+          for device in keys[5:9]:
+            GPIO.output(config[device], GPIO.LOW)
+          server.send('OK'.encode('ascii'))
+          continue
+        except:
+          server.send('NOT_OK'.encode('ascii'))
+
   except RuntimeError as error:
         return error.args[0]
 

@@ -62,7 +62,7 @@ def get_sucess(conn):
     if response == 'OK':
       print('Dispositivo alternado com sucesso!')
     elif response == 'NOT_OK':
-      print('Houve problema em alternar dispositivo!!')
+      print('Houve problema em alternar(ON/OFF) dispositivo!!')
   except:
     print('Error getting response')
     
@@ -125,15 +125,26 @@ def menu():
           room = int(input('Digite o numero da sala desejada: '))
         
         device = -1
-        while device < 1 or device > 4:
+        while device < 1 or device > 6:
           os.system('clear')
           print('-------- Dispositivos --------')
           sendCommand(listconn[addresses[room]], f'GET_STATUS')
           show_output(listconn[addresses[room]])
+          print('OBS: Escolha o digito 5 para acionar todos os dispositivos (ON) e 6 para desativar(OFF)')
           device = int(input('Digite o numero do dispositivo que deseja alternar entre ON/OFF: '))
           print('escolhi '+str(device))
           if device == 1:
             sendCommand(listconn[addresses[room]], f'ON_OFF_L_01')
+          elif device == 2:
+            sendCommand(listconn[addresses[room]], f'ON_OFF_L_02')
+          elif device == 3:
+            sendCommand(listconn[addresses[room]], f'ON_OFF_AC')
+          elif device == 4:
+            sendCommand(listconn[addresses[room]], f'ON_OFF_PR')
+          elif device == 5:
+            sendCommand(listconn[addresses[room]], f'ON_ALL')
+          elif device == 6:
+            sendCommand(listconn[addresses[room]], f'OFF_ALL')
           get_sucess(listconn[addresses[room]])
           print('Redirecionando para o menu. Aguarde...')
           time.sleep(2)
