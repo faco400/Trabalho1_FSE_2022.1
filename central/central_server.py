@@ -132,7 +132,6 @@ def menu():
           show_output(listconn[addresses[room]])
           print('OBS: Escolha o digito 5 para acionar todos os dispositivos (ON) e 6 para desativar(OFF)')
           device = int(input('Digite o numero do dispositivo que deseja alternar entre ON/OFF: '))
-          print('escolhi '+str(device))
           if device == 1:
             sendCommand(listconn[addresses[room]], f'ON_OFF_L_01')
           elif device == 2:

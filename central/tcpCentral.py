@@ -37,21 +37,3 @@ def init():
   server.listen(4)
 
   return server
-
-def accept_connections():
-  server = init()
-  while True:
-    conn, addr = server.accept()
-    print(f"{str(addr)} connected")
-  
-  
-def handle(conn):
-  try:
-    status = conn.recv(2048).decode('ascii')
-    status = json.loads(status)
-    print(status)
-    room_status = status
-    return room_status
-
-  except:
-    print('Error handling connection')

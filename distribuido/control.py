@@ -3,7 +3,6 @@ import adafruit_dht
 import time
 import os
 import json
-from definitions import *
 import board
 
 def setupPins(config):
@@ -119,7 +118,7 @@ def states(config):
         json.dump(msg,outfile)
       # msg_to_send = json.dumps(msg).encode('ascii')
       # server.send(msg_to_send)
-      time.sleep(0.2)
+      time.sleep(0.05)
       # os.system('clear')
   except KeyboardInterrupt: # if ctrl + c is pressed, exit cleanly
     # GPIO.cleanup()

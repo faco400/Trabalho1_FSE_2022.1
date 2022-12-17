@@ -58,9 +58,11 @@ def receive(server, config):
 
 if __name__ == '__main__':
   try:
+    print('Conectando com o servidor central. Aguarde...')
     server, config = tcpDistr.init()
     controlThread = threading.Thread(target=control.states, args=(config,)) # thread pra atualizar controle de estados
     controlThread.start()  # inicia a thread
+    os.system('clear')
     print('Conversando com servidor central...')
     receive(server, config) # Inicia dialogo com central
 
