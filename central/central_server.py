@@ -4,13 +4,19 @@ import json
 import time
 import tcpCentral
 import sys
+from time import gmtime, strftime
 
-room_status = []
 listconn = {}
 addresses = []
 
+def write_log(COMMAND):
+  with open('log.csv', 'a') as logfile:
+    dateNow = strftime('%d-%m-%Y %H:%M:%S', gmtime())
+    print(f'[{dateNow}] - {COMMAND} REQUEST TO DISTR_SERVER',file = logfile)
+
 def sendCommand(conn, COMMAND):
   conn.send(COMMAND.encode('ascii'))
+  write_log(COMMAND)
 
 # Apagar? Desnecessario...
 def handle(conn):
@@ -34,6 +40,7 @@ def show_output(conn):
     print('2) L_02: '+status['L_02'])
     print('3) AC: '+status['AC'])
     print('4) PR: '+status['PR'])
+    print('5) AL_BZ: '+status['AL_BZ'])
   except:
     print('Error getting output')
 
@@ -65,7 +72,7 @@ def get_sucess(conn):
       print('Houve problema em alternar(ON/OFF) dispositivo!!')
   except:
     print('Error getting response')
-    
+
 
 def receive():
   try:
@@ -73,10 +80,10 @@ def receive():
       conn, addr = server.accept()
       addresses.append(addr[0])
       listconn[addr[0]] = conn
-      print(f"{str(addr)} connected")
+      # print(f"{str(addr)} connected")
 
-  except KeyboardInterrupt:
-    return
+  except RuntimeError as error:
+    return error.args[0]
 
 def menu():
   try:
@@ -125,12 +132,12 @@ def menu():
           room = int(input('Digite o numero da sala desejada: '))
         
         device = -1
-        while device < 1 or device > 6:
+        while device < 1 or device > 7:
           os.system('clear')
           print('-------- Dispositivos --------')
           sendCommand(listconn[addresses[room]], f'GET_STATUS')
           show_output(listconn[addresses[room]])
-          print('OBS: Escolha o digito 5 para acionar todos os dispositivos (ON) e 6 para desativar(OFF)')
+          print('OBS: Escolha o digito 6 para acionar todos os dispositivos (ON) e 7 para desativar(OFF)')
           device = int(input('Digite o numero do dispositivo que deseja alternar entre ON/OFF: '))
           if device == 1:
             sendCommand(listconn[addresses[room]], f'ON_OFF_L_01')
@@ -141,8 +148,10 @@ def menu():
           elif device == 4:
             sendCommand(listconn[addresses[room]], f'ON_OFF_PR')
           elif device == 5:
-            sendCommand(listconn[addresses[room]], f'ON_ALL')
+            sendCommand(listconn[addresses[room]], f'ON_OFF_AL_BZ')
           elif device == 6:
+            sendCommand(listconn[addresses[room]], f'ON_ALL')
+          elif device == 7:
             sendCommand(listconn[addresses[room]], f'OFF_ALL')
           get_sucess(listconn[addresses[room]])
           print('Redirecionando para o menu. Aguarde...')
