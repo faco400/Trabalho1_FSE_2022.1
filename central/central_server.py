@@ -18,22 +18,23 @@ def sendCommand(conn, COMMAND):
   conn.send(COMMAND.encode('ascii'))
   write_log(COMMAND)
 
-# Apagar? Desnecessario...
-def handle(conn):
+def alarm_alert(conn, status_alarm):
   try:
-    while True:
-      status = conn.recv(2048).decode('ascii')
-      status = json.loads(status)
-      room_status = status
-      # print(status)
-  except KeyboardInterrupt:
-    print('Error handling connections')
-    exit()
-
+    if status_alarm == 'OFF':
+      print('Acionando alarme...')
+      sendCommand(conn, f'ON_OFF_AL_BZ')
+      get_sucess(conn)
+      time.sleep(2)
+  except RuntimeError as error:
+    return error.args[0]
 def show_output(conn):
   try:
     status = conn.recv(2048).decode('ascii')
     status = json.loads(status)
+
+    if status['SPres'] == 'ON' or status['SFum'] == 'ON' or status['SJan'] == 'ON' or status['SPor'] == 'ON' :
+      alarm_alert(conn, status['AL_BZ'])
+      status['AL_BZ'] = 'ON'
 
     print('Saidas:')
     print('1) L_01: '+status['L_01'])
@@ -49,6 +50,10 @@ def get_status(conn):
     status = conn.recv(2048).decode('ascii')
     status = json.loads(status)
 
+    if status['SPres'] == 'ON' or status['SFum'] == 'ON' or status['SJan'] == 'ON' or status['SPor'] == 'ON' :
+      alarm_alert(conn, status)
+      status['AL_BZ'] = 'ON'
+
     print('Saidas:')
     print('L_01: '+status['L_01']+' L_02: '+status['L_02'])
     print('AC: '+status['AC'])
@@ -60,8 +65,9 @@ def get_status(conn):
     print('SJan: '+status['SJan']+' SPor: '+status['SPor'])
     print("Temp={0:0.1f}*C  Humidity={1:0.1f}%".format(status['Temperatura'], status['Humidade']))
     print('Total de pessoas nesta sala: '+status['Pessoas'])
-  except:
+  except RuntimeError as error:
     print('Error getting status')
+    return error.args[0]
 
 def get_sucess(conn):
   try:
@@ -111,9 +117,9 @@ def menu():
           print('Salas conectadas:')
           for i in range(len(addresses)):
             print(f'Sala {i} - IP:{addresses[i]}')
-          room = int(input('Digite o numero da sala desejada'))
+          room = int(input('Digite o numero da sala desejada '))
 
-        sendCommand(listconn[addresses[room]], f'GET_STATUS') #Mandar ip? Sala...?
+        sendCommand(listconn[addresses[room]], f'GET_STATUS')
         get_status(listconn[addresses[room]])
         input('Aperte enter para continuar...')
 

@@ -35,6 +35,8 @@ def countPeople(config,msg):
           countP = countP + 1
       if GPIO.event_detected(config['SC_OUT']):
           countP = countP - 1
+          if countP < 0:
+            countP = 0
   except:
     print('Error counting people')
 
